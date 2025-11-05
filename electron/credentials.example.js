@@ -10,6 +10,6 @@
 module.exports = {
   BROWSERBASE_API_KEY: 'your_browserbase_api_key_here',
   BROWSERBASE_PROJECT_ID: 'your_project_id_here',
-  OPENAI_API_KEY: 'your_openai_api_key_here',
+  OPENAI_API_KEY: '', // Leave empty to use Stagehand's FREE built-in model (recommended)
   TAMM_MOBILE_NUMBER: '971559419961',
 };
