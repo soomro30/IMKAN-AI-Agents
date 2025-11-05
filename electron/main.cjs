@@ -90,12 +90,43 @@ function ensureEnvFile() {
 
     // Load credentials from local file (not committed to git)
     let credentials;
-    try {
-      credentials = require('./credentials.js');
-      console.log('✓ Loaded credentials from credentials.js');
-    } catch (error) {
-      console.warn('⚠️  credentials.js not found, using placeholders');
+
+    // Try multiple paths for credentials.js (development vs production)
+    const possiblePaths = [
+      path.join(__dirname, 'credentials.js'),
+      path.join(process.cwd(), 'electron', 'credentials.js'),
+      path.join(app.getAppPath(), 'electron', 'credentials.js'),
+    ];
+
+    let credentialsPath = null;
+    for (const testPath of possiblePaths) {
+      if (fs.existsSync(testPath)) {
+        credentialsPath = testPath;
+        break;
+      }
+    }
+
+    if (credentialsPath) {
+      try {
+        // Clear require cache to ensure fresh load
+        delete require.cache[credentialsPath];
+        credentials = require(credentialsPath);
+        console.log('✓ Loaded credentials from credentials.js');
+        console.log(`   Path: ${credentialsPath}`);
+      } catch (error) {
+        console.warn('⚠️  Error loading credentials.js, using placeholders');
+        console.warn(`   Path: ${credentialsPath}`);
+        console.warn(`   Error: ${error.message}`);
+        credentials = null;
+      }
+    } else {
+      console.warn('⚠️  credentials.js not found in any expected location');
+      console.warn('   Tried paths:', possiblePaths);
       console.warn('   Copy credentials.example.js to credentials.js and add your API keys');
+    }
+
+    // Use placeholders if credentials not loaded
+    if (!credentials) {
       credentials = {
         BROWSERBASE_API_KEY: 'your_browserbase_api_key_here',
         BROWSERBASE_PROJECT_ID: 'your_project_id_here',
