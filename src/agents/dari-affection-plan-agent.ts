@@ -1503,7 +1503,9 @@ export class DariAffectionPlanAgent {
     console.log('');
 
     // Calculate statistics
-    const totalPlots = this.results.length;
+    const totalPlotsUploaded = this.plots.length; // Total plots from Excel
+    const plotsAttempted = this.results.length; // Plots actually attempted
+    const plotsSkipped = totalPlotsUploaded - plotsAttempted; // Plots never attempted
     const paidPlots = this.results.filter(r => r.paymentCompleted).length;
     const downloadedPlots = this.results.filter(r => r.downloadCompleted).length;
     const notFoundPlots = this.results.filter(r => r.error?.includes('not found') || r.error?.includes('don\'t own any property')).length;
@@ -1512,13 +1514,25 @@ export class DariAffectionPlanAgent {
 
     console.log('📊 OVERALL STATISTICS:');
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-    console.log(`   Total Plots Attempted:     ${totalPlots}`);
+    console.log(`   Total Plots Uploaded:      ${totalPlotsUploaded} (from Excel)`);
+    console.log(`   Plots Attempted:           ${plotsAttempted}`);
+    console.log(`   Plots Skipped:             ${plotsSkipped} ${plotsSkipped > 0 ? '⚠️' : ''}`);
     console.log(`   Payments Completed:        ${paidPlots} ✅`);
     console.log(`   Downloads Completed:       ${downloadedPlots} 📥`);
     console.log(`   Downloads Pending:         ${pendingDownloads} ⏳`);
     console.log(`   Not Found in Dari:         ${notFoundPlots} 🔍`);
     console.log(`   Other Failures:            ${otherFailedPlots} ❌`);
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
+
+    // Warning for skipped plots
+    if (plotsSkipped > 0) {
+      console.log('🛑 PLOTS SKIPPED WARNING:');
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      console.log(`   ${plotsSkipped} plot(s) from the Excel file were NOT processed.`);
+      console.log('   The agent stopped before attempting these plots.');
+      console.log('   Likely cause: Insufficient balance or critical error on first plot.');
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
+    }
 
     // Detailed results table
     console.log('📋 DETAILED RESULTS:');
@@ -1574,12 +1588,14 @@ export class DariAffectionPlanAgent {
     // Show success message if all completed
     const totalFailedPlots = notFoundPlots + otherFailedPlots;
 
-    if (downloadedPlots === totalPlots) {
+    if (downloadedPlots === totalPlotsUploaded) {
       console.log('🎉 SUCCESS! All plots processed and downloaded successfully!\n');
-    } else if (paidPlots === totalPlots && downloadedPlots > 0) {
+    } else if (paidPlots === plotsAttempted && downloadedPlots > 0) {
       console.log('✅ All payments completed! Some downloads may need retry.\n');
-    } else if (totalFailedPlots === totalPlots) {
+    } else if (totalFailedPlots === plotsAttempted) {
       console.log('❌ No plots were successfully processed. Please check errors above.\n');
+    } else if (plotsSkipped > 0) {
+      console.log(`⚠️  PARTIAL COMPLETION: ${plotsSkipped} plot(s) were skipped and not processed.\n`);
     }
 
     console.log('╔════════════════════════════════════════════════════════════════╗');
@@ -1592,7 +1608,7 @@ export class DariAffectionPlanAgent {
 
       const emailSummary: EmailSummary = {
         agentName: 'Dari Affection Plan Agent',
-        totalPlots,
+        totalPlots: totalPlotsUploaded, // Use uploaded count, not attempted count
         successfulPlots: downloadedPlots,
         failedPlots: totalFailedPlots,
         results: this.results,

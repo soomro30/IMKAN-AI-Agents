@@ -26,7 +26,8 @@ export interface PlotResult {
 
 export interface EmailSummary {
   agentName: string;
-  totalPlots: number;
+  totalPlots: number; // Total plots uploaded from Excel
+  totalPlotsUploaded?: number; // DEPRECATED: Use totalPlots instead (kept for backward compatibility)
   successfulPlots: number;
   failedPlots: number;
   results: PlotResult[];
@@ -104,6 +105,10 @@ function generateEmailHTML(summary: EmailSummary): string {
   const otherFailedPlots = results.filter(
     r => r.error && !r.error.includes('not found') && !r.error.includes("don't own any property")
   ).length;
+
+  // Calculate plots attempted vs skipped
+  const plotsAttempted = results.length;
+  const plotsSkipped = totalPlots - plotsAttempted;
 
   // Duration calculation
   let duration = '';
@@ -254,8 +259,12 @@ function generateEmailHTML(summary: EmailSummary): string {
 
       <div class="stats-grid">
         <div class="stat-card">
-          <div class="stat-label">Total Plots</div>
+          <div class="stat-label">Uploaded (Excel)</div>
           <div class="stat-value">${totalPlots}</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Attempted</div>
+          <div class="stat-value">${plotsAttempted}</div>
         </div>
         <div class="stat-card success">
           <div class="stat-label">Downloads</div>
@@ -268,6 +277,10 @@ function generateEmailHTML(summary: EmailSummary): string {
         <div class="stat-card warning">
           <div class="stat-label">Not Found</div>
           <div class="stat-value">${notFoundPlots}</div>
+        </div>
+        <div class="stat-card ${plotsSkipped > 0 ? 'error' : ''}">
+          <div class="stat-label">Skipped</div>
+          <div class="stat-value">${plotsSkipped}</div>
         </div>
         <div class="stat-card error">
           <div class="stat-label">Other Failures</div>
@@ -313,6 +326,15 @@ function generateEmailHTML(summary: EmailSummary): string {
           }).join('')}
         </tbody>
       </table>
+
+      ${plotsSkipped > 0 ? `
+        <div style="background-color: #fee2e2; border-left: 4px solid #ef4444; padding: 15px; border-radius: 4px; margin-top: 20px;">
+          <h3 style="margin: 0 0 10px 0; color: #991b1b;">🛑 Plots Skipped (${plotsSkipped} of ${totalPlots})</h3>
+          <p style="margin: 0; font-size: 14px; color: #7f1d1d;">
+            ${plotsSkipped} plot(s) from the Excel file were <strong>not processed</strong>. The agent stopped before attempting these plots, likely due to insufficient balance or a critical error on the first plot.
+          </p>
+        </div>
+      ` : ''}
 
       ${notFoundPlots > 0 ? `
         <div style="background-color: #fef3c7; border-left: 4px solid #f59e0b; padding: 15px; border-radius: 4px; margin-top: 20px;">
@@ -363,13 +385,19 @@ function generateEmailText(summary: EmailSummary): string {
     r => r.error && !r.error.includes('not found') && !r.error.includes("don't own any property")
   ).length;
 
+  // Calculate plots attempted vs skipped
+  const plotsAttempted = results.length;
+  const plotsSkipped = totalPlots - plotsAttempted;
+
   let text = `
 ${agentName} - Automation Summary Report
 ${'='.repeat(60)}
 
 OVERALL STATISTICS:
 ------------------
-Total Plots Attempted:     ${totalPlots}
+Total Plots Uploaded:      ${totalPlots}
+Plots Attempted:           ${plotsAttempted}
+Plots Skipped:             ${plotsSkipped}
 Payments Completed:        ${paidPlots}
 Downloads Completed:       ${downloadedPlots}
 Not Found in Dari:         ${notFoundPlots}

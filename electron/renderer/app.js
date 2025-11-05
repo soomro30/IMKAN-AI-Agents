@@ -133,6 +133,18 @@ async function selectFile() {
     selectedFile = filePath;
     const fileName = filePath.split(/[/\\]/).pop();
     document.getElementById('fileName').textContent = fileName;
+
+    // Count plots in the selected file
+    const plotColumnIndex = parseInt(document.getElementById('plotColumn').value);
+    const plotCountResult = await window.electronAPI.countPlotsInExcel(filePath, plotColumnIndex);
+
+    if (plotCountResult.success) {
+      const plotCount = plotCountResult.count;
+      document.getElementById('fileName').textContent = `${fileName} (${plotCount} plot${plotCount !== 1 ? 's' : ''})`;
+    } else {
+      document.getElementById('fileName').textContent = `${fileName} (unable to count plots)`;
+    }
+
     document.getElementById('fileInfo').classList.remove('hidden');
     document.getElementById('runAgentBtn').disabled = false;
   }
@@ -148,6 +160,31 @@ async function runAgent() {
   if (!mobileNumber) {
     alert('Please enter a mobile number for UAE Pass login');
     return;
+  }
+
+  // Count plots in Excel file
+  const plotColumnIndex = parseInt(document.getElementById('plotColumn').value);
+  const plotCountResult = await window.electronAPI.countPlotsInExcel(selectedFile, plotColumnIndex);
+
+  if (!plotCountResult.success) {
+    alert(`Error reading Excel file: ${plotCountResult.error}`);
+    return;
+  }
+
+  const plotCount = plotCountResult.count;
+
+  // Show confirmation dialog with plot count
+  const confirmMessage = `⚠️ CONFIRMATION REQUIRED\n\n` +
+    `You are about to process ${plotCount} plot(s) from the Excel file.\n\n` +
+    `⚠️ WARNING:\n` +
+    `• Each plot will deduct a fee from your DARI Wallet balance\n` +
+    `• Make sure you uploaded the correct Excel file\n` +
+    `• Verify you have sufficient balance for all plots\n\n` +
+    `Do you want to proceed with ${plotCount} plot(s)?`;
+
+  const confirmed = confirm(confirmMessage);
+  if (!confirmed) {
+    return; // User cancelled
   }
 
   if (!settings.general) {

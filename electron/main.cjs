@@ -2,6 +2,7 @@ const { app, BrowserWindow, ipcMain, dialog } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const { spawn } = require('child_process');
+const XLSX = require('xlsx');
 
 let mainWindow;
 let agentProcess = null;
@@ -368,4 +369,39 @@ ipcMain.handle('open-downloads', () => {
 
 ipcMain.handle('get-downloads-path', () => {
   return DOWNLOADS_PATH;
+});
+
+// Count plots in Excel file
+ipcMain.handle('count-plots-in-excel', async (event, excelFilePath, plotColumnIndex) => {
+  try {
+    if (!fs.existsSync(excelFilePath)) {
+      throw new Error('Excel file not found');
+    }
+
+    const workbook = XLSX.readFile(excelFilePath);
+    const sheetName = workbook.SheetNames[0];
+    const worksheet = workbook.Sheets[sheetName];
+    const data = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+
+    if (data.length === 0) {
+      throw new Error('Excel file is empty');
+    }
+
+    // Count non-empty cells in the specified column (skip header row)
+    let plotCount = 0;
+    for (let i = 1; i < data.length; i++) {
+      const row = data[i];
+      if (row && row[plotColumnIndex]) {
+        const plotNumber = String(row[plotColumnIndex]).trim();
+        if (plotNumber) {
+          plotCount++;
+        }
+      }
+    }
+
+    return { success: true, count: plotCount };
+  } catch (error) {
+    console.error('Error counting plots:', error);
+    return { success: false, error: error.message };
+  }
 });
