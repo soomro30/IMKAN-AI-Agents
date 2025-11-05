@@ -1,0 +1,254 @@
+let currentAgent = null;
+let selectedFile = null;
+let settings = {};
+
+const views = {
+  selection: document.getElementById('agentSelectionView'),
+  config: document.getElementById('agentConfigView'),
+  running: document.getElementById('agentRunningView'),
+  finished: document.getElementById('agentFinishedView'),
+};
+
+async function init() {
+  settings = await window.electronAPI.getSettings();
+  setupEventListeners();
+  showView('selection');
+}
+
+function setupEventListeners() {
+  document.querySelectorAll('.select-agent-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const card = e.target.closest('.agent-card');
+      const agentId = card.dataset.agentId;
+      selectAgent(agentId);
+    });
+  });
+
+  document.getElementById('backBtn').addEventListener('click', () => {
+    showView('selection');
+    resetConfig();
+  });
+
+  document.getElementById('selectFileBtn').addEventListener('click', selectFile);
+  document.getElementById('runAgentBtn').addEventListener('click', runAgent);
+  document.getElementById('stopAgentBtn').addEventListener('click', stopAgent);
+  document.getElementById('openDownloadsBtn').addEventListener('click', openDownloads);
+  document.getElementById('openDownloadsFolderBtn').addEventListener('click', openDownloads);
+  document.getElementById('runAnotherBtn').addEventListener('click', () => {
+    showView('selection');
+    resetConfig();
+  });
+  document.getElementById('clearConsoleBtn').addEventListener('click', clearConsole);
+
+  document.getElementById('advancedToggle').addEventListener('click', () => {
+    const advancedSection = document.getElementById('advancedSettings');
+    advancedSection.classList.toggle('hidden');
+  });
+
+  document.getElementById('enableAccountSwitch').addEventListener('change', (e) => {
+    document.getElementById('accountName').disabled = !e.target.checked;
+  });
+
+  document.getElementById('enableEmailNotification').addEventListener('change', (e) => {
+    document.getElementById('recipientEmail').disabled = !e.target.checked;
+  });
+
+  window.electronAPI.onAgentOutput((data) => {
+    appendConsoleOutput(data, 'info');
+  });
+
+  window.electronAPI.onAgentError((data) => {
+    appendConsoleOutput(data, 'error');
+  });
+
+  window.electronAPI.onAgentFinished((data) => {
+    if (data.success && data.code === 0) {
+      showView('finished');
+      if (data.downloadPath) {
+        const pathElement = document.getElementById('downloadPath');
+        if (pathElement) {
+          pathElement.textContent = data.downloadPath;
+        }
+      }
+    } else {
+      alert(`Agent failed with exit code ${data.code}. Check console output for details.`);
+      showView('config');
+    }
+  });
+}
+
+function showView(viewName) {
+  Object.values(views).forEach(view => view.classList.add('hidden'));
+  views[viewName].classList.remove('hidden');
+}
+
+function selectAgent(agentId) {
+  currentAgent = agentId;
+  const isAffectionPlan = agentId === 'dari-affection-plan';
+
+  let title = 'Configure Dari Title Deed Agent';
+  if (isAffectionPlan) {
+    title = 'Configure Dari Affection Plan Agent';
+  }
+  document.getElementById('agentTitle').textContent = title;
+
+  document.getElementById('accountSwitchingSection').classList.toggle('hidden', !isAffectionPlan);
+  document.getElementById('serviceConfigSection').classList.toggle('hidden', !isAffectionPlan);
+  document.getElementById('emailNotificationSection').classList.toggle('hidden', !isAffectionPlan);
+  document.getElementById('downloadTimeoutSection').classList.toggle('hidden', !isAffectionPlan);
+
+  loadAgentSettings(agentId);
+  showView('config');
+}
+
+function loadAgentSettings(agentId) {
+  let agentSettings;
+  if (agentId === 'dari-affection-plan') {
+    agentSettings = settings.affectionPlan || {};
+  } else {
+    agentSettings = settings.titleDeed || {};
+  }
+
+  document.getElementById('mobileNumber').value = settings.general?.mobileNumber || '+971559419961';
+  document.getElementById('plotColumn').value = agentSettings.plotColumnIndex || 2;
+
+  if (agentId === 'dari-affection-plan') {
+    document.getElementById('serviceName').value = agentSettings.serviceName || 'Verification Certificate (Unit)';
+    document.getElementById('enableAccountSwitch').checked = agentSettings.accountSwitching?.enabled || false;
+    document.getElementById('accountName').value = agentSettings.accountSwitching?.targetAccountName || '';
+    document.getElementById('accountName').disabled = !agentSettings.accountSwitching?.enabled;
+    document.getElementById('enableEmailNotification').checked = agentSettings.emailNotification?.enabled || false;
+    document.getElementById('recipientEmail').value = agentSettings.emailNotification?.recipientEmail || '';
+    document.getElementById('recipientEmail').disabled = !agentSettings.emailNotification?.enabled;
+    document.getElementById('downloadTimeout').value = (agentSettings.waitTimes?.downloadPageTimeout || 900000) / 1000;
+  }
+
+  document.getElementById('captchaTimeout').value = (agentSettings.waitTimes?.captcha || 10000) / 1000;
+  document.getElementById('uaePassTimeout').value = (agentSettings.waitTimes?.uaePassTimeout || 180000) / 1000;
+}
+
+async function selectFile() {
+  const filePath = await window.electronAPI.selectExcelFile();
+  if (filePath) {
+    selectedFile = filePath;
+    const fileName = filePath.split(/[/\\]/).pop();
+    document.getElementById('fileName').textContent = fileName;
+    document.getElementById('fileInfo').classList.remove('hidden');
+    document.getElementById('runAgentBtn').disabled = false;
+  }
+}
+
+async function runAgent() {
+  if (!selectedFile || !currentAgent) {
+    alert('Please select an Excel file first');
+    return;
+  }
+
+  const mobileNumber = document.getElementById('mobileNumber').value.trim();
+  if (!mobileNumber) {
+    alert('Please enter a mobile number for UAE Pass login');
+    return;
+  }
+
+  if (!settings.general) {
+    settings.general = {};
+  }
+  settings.general.mobileNumber = mobileNumber;
+
+  const agentSettings = {
+    plotColumnIndex: parseInt(document.getElementById('plotColumn').value),
+    waitTimes: {
+      captcha: parseInt(document.getElementById('captchaTimeout').value) * 1000,
+      uaePassTimeout: parseInt(document.getElementById('uaePassTimeout').value) * 1000,
+    },
+  };
+
+  if (currentAgent === 'dari-affection-plan') {
+    agentSettings.serviceName = document.getElementById('serviceName').value.trim();
+    agentSettings.accountSwitching = {
+      enabled: document.getElementById('enableAccountSwitch').checked,
+      targetAccountName: document.getElementById('accountName').value,
+    };
+    agentSettings.emailNotification = {
+      enabled: document.getElementById('enableEmailNotification').checked,
+      recipientEmail: document.getElementById('recipientEmail').value.trim(),
+    };
+    agentSettings.waitTimes.downloadPageTimeout = parseInt(document.getElementById('downloadTimeout').value) * 1000;
+
+    if (!settings.affectionPlan) {
+      settings.affectionPlan = {};
+    }
+    settings.affectionPlan = { ...settings.affectionPlan, ...agentSettings };
+  } else {
+    if (!settings.titleDeed) {
+      settings.titleDeed = {};
+    }
+    settings.titleDeed = { ...settings.titleDeed, ...agentSettings };
+  }
+
+  await window.electronAPI.saveSettings(settings);
+
+  showView('running');
+
+  let runningTitle = 'Dari Title Deed Agent Running...';
+  let agentFolder = 'TitleDeeds';
+
+  if (currentAgent === 'dari-affection-plan') {
+    runningTitle = 'Dari Affection Plan Agent Running...';
+    agentFolder = 'AffectionPlans';
+  }
+
+  document.getElementById('runningAgentTitle').textContent = runningTitle;
+
+  clearConsole();
+
+  const downloadPath = await window.electronAPI.getDownloadsPath();
+  const timestamp = new Date().toISOString().split('T')[0];
+  const fullPath = `${downloadPath}/${agentFolder}/${timestamp}`;
+
+  document.getElementById('downloadPath').textContent = fullPath;
+  document.getElementById('downloadInfo').classList.remove('hidden');
+
+  const result = await window.electronAPI.runAgent(currentAgent, selectedFile);
+
+  if (!result.success) {
+    alert(`Error: ${result.error}`);
+    showView('config');
+  }
+}
+
+async function stopAgent() {
+  const confirmed = confirm('Are you sure you want to stop the agent?');
+  if (confirmed) {
+    await window.electronAPI.stopAgent();
+    showView('config');
+  }
+}
+
+function openDownloads() {
+  window.electronAPI.openDownloads();
+}
+
+function appendConsoleOutput(text, type = 'info') {
+  const console = document.getElementById('consoleOutput');
+  const line = document.createElement('div');
+  line.textContent = text;
+  line.style.color = type === 'error' ? '#fca5a5' : '#e2e8f0';
+  console.appendChild(line);
+  console.scrollTop = console.scrollHeight;
+}
+
+function clearConsole() {
+  document.getElementById('consoleOutput').innerHTML = '';
+}
+
+function resetConfig() {
+  selectedFile = null;
+  currentAgent = null;
+  document.getElementById('fileName').textContent = 'No file selected';
+  document.getElementById('fileInfo').classList.add('hidden');
+  document.getElementById('runAgentBtn').disabled = true;
+  document.getElementById('advancedSettings').classList.add('hidden');
+}
+
+init();

@@ -1,0 +1,90 @@
+{
+  "name": "imkan-agents",
+  "version": "1.4.0",
+  "description": "IMKAN Automation Agents - Powered by SAAL.AI with Stagehand v3 AI enhancements",
+  "main": "electron/main.cjs",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx src/index.ts",
+    "dev:dari-title-deed": "tsx src/index.ts dari-title-deed",
+    "dev:dari-affection-plan": "tsx src/index.ts dari-affection-plan",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src --ext .ts",
+    "electron": "npm run build && electron electron/main.cjs",
+    "electron:dev": "concurrently \"tsc --watch\" \"nodemon --watch dist --exec 'electron electron/main.cjs'\"",
+    "electron:quick": "electron electron/main.cjs",
+    "package": "npm run build && electron-builder",
+    "package:mac": "npm run build && electron-builder --mac",
+    "package:win": "npm run build && electron-builder --win",
+    "package:linux": "npm run build && electron-builder --linux"
+  },
+  "keywords": [
+    "automation",
+    "browser",
+    "stagehand",
+    "tamm"
+  ],
+  "author": "IMKAN",
+  "license": "ISC",
+  "build": {
+    "appId": "com.imkan.agents",
+    "productName": "IMKAN Agents",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "electron/**/*",
+      "dist/**/*",
+      "node_modules/**/*",
+      "package.json"
+    ],
+    "asarUnpack": [
+      "dist/**/*",
+      "node_modules/**/*"
+    ],
+    "mac": {
+      "category": "public.app-category.productivity",
+      "target": [
+        "dmg",
+        "zip"
+      ]
+    },
+    "win": {
+      "target": [
+        "nsis",
+        "portable"
+      ]
+    },
+    "linux": {
+      "target": [
+        "AppImage",
+        "deb"
+      ]
+    }
+  },
+  "dependencies": {
+    "@browserbasehq/stagehand": "^2.0.0",
+    "dotenv": "^16.4.7",
+    "nodemailer": "^7.0.10",
+    "xlsx": "^0.18.5",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "@types/nodemailer": "^7.0.3",
+    "@typescript-eslint/eslint-plugin": "^8.18.2",
+    "@typescript-eslint/parser": "^8.18.2",
+    "concurrently": "^9.2.1",
+    "electron": "^39.0.0",
+    "electron-builder": "^26.0.12",
+    "eslint": "^9.17.0",
+    "nodemon": "^3.1.10",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2"
+  },
+  "optionalDependencies": {
+    "fsevents": "^2.3.3"
+  }
+}

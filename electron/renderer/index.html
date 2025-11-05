@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IMKAN Agents - Powered by SAAL.AI</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app-container">
+    <header class="header">
+      <div class="header-content">
+        <div class="brand">
+          <img src="https://www.waleedshah.ae/wp-content/uploads/2018/07/imkan-logo-5922b29939c99-300x129.png" alt="IMKAN" class="brand-logo">
+          <div class="brand-text">
+            <h1>Automation Agents</h1>
+            <p class="powered-by">Powered by <span class="highlight">SAAL.AI</span></p>
+          </div>
+        </div>
+        <button class="btn-secondary" id="openDownloadsBtn">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 9h18v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9Z"/>
+            <path d="M3 9V7a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v2"/>
+          </svg>
+          Open Downloads
+        </button>
+      </div>
+    </header>
+
+    <main class="main-content">
+      <div class="agent-selection" id="agentSelectionView">
+        <h2>Select Agent</h2>
+        <p class="subtitle">Choose an automation agent to run</p>
+
+        <div class="agent-cards">
+          <div class="agent-card" data-agent-id="dari-title-deed">
+            <div class="agent-icon">
+              <img src="https://www.adres.ae/wp-content/uploads/2022/02/Dari-Logo.png" alt="Dari Abu Dhabi">
+            </div>
+            <h3>Dari Title Deed Agent</h3>
+            <p>Automates title deed generation and download from Dari platform using Excel data</p>
+            <button class="btn-primary select-agent-btn">
+              Select
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="9 18 15 12 9 6"/>
+              </svg>
+            </button>
+          </div>
+
+          <div class="agent-card" data-agent-id="dari-affection-plan">
+            <div class="agent-icon">
+              <img src="https://www.adres.ae/wp-content/uploads/2022/02/Dari-Logo.png" alt="Dari Abu Dhabi">
+            </div>
+            <h3>Dari Affection Plan Agent</h3>
+            <p>Automates verification certificate (unit) generation and download with Dari Wallet payment</p>
+            <button class="btn-primary select-agent-btn">
+              Select
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="9 18 15 12 9 6"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="agent-config hidden" id="agentConfigView">
+        <div class="config-header">
+          <button class="btn-back" id="backBtn">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="15 18 9 12 15 6"/>
+            </svg>
+            Back
+          </button>
+          <h2 id="agentTitle">Configure Agent</h2>
+        </div>
+
+        <div class="config-content">
+          <div class="config-section">
+            <h3>1. Upload Excel File</h3>
+            <div class="file-upload">
+              <button class="btn-upload" id="selectFileBtn">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                  <polyline points="17 8 12 3 7 8"/>
+                  <line x1="12" y1="3" x2="12" y2="15"/>
+                </svg>
+                Choose Excel File
+              </button>
+              <div class="file-info hidden" id="fileInfo">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                  <polyline points="14 2 14 8 20 8"/>
+                </svg>
+                <span id="fileName">No file selected</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="config-section">
+            <h3>2. Basic Settings</h3>
+            <div class="form-group">
+              <label for="mobileNumber">UAE Pass Mobile Number (with country code)</label>
+              <input type="tel" id="mobileNumber" placeholder="+971559419961" value="+971559419961">
+              <small style="color: var(--text-secondary); display: block; margin-top: 0.25rem;">
+                Used for UAE Pass login authentication
+              </small>
+            </div>
+
+            <div class="form-group">
+              <label for="plotColumn">Excel Column for Plot Numbers (0 = 1st column, 1 = 2nd, etc.)</label>
+              <input type="number" id="plotColumn" min="0" max="25" value="2">
+            </div>
+
+            <div class="form-group" id="serviceConfigSection">
+              <label for="serviceName">Service Name</label>
+              <input type="text" id="serviceName" placeholder="Site Plan" value="Site Plan">
+              <small style="color: var(--text-secondary); display: block; margin-top: 0.25rem;">
+                The exact service name to search for in Dari Services menu
+              </small>
+            </div>
+
+            <div class="form-group" id="accountSwitchingSection">
+              <div class="checkbox-group">
+                <input type="checkbox" id="enableAccountSwitch">
+                <label for="enableAccountSwitch">Enable Account Switching</label>
+              </div>
+              <input type="text" id="accountName" placeholder="Account name (e.g., Al Jurf Hospitality Service)">
+            </div>
+
+            <div class="form-group" id="emailNotificationSection">
+              <div class="checkbox-group">
+                <input type="checkbox" id="enableEmailNotification">
+                <label for="enableEmailNotification">Enable Email Notifications</label>
+              </div>
+              <label for="recipientEmail">Recipient Email Address</label>
+              <input type="email" id="recipientEmail" placeholder="your.email@example.com" disabled>
+              <small style="color: var(--text-secondary); display: block; margin-top: 0.25rem;">
+                Receive a detailed summary report with application IDs, payment status, and downloads
+              </small>
+            </div>
+
+            <button class="btn-text" id="advancedToggle">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="3"/>
+                <path d="M12 1v6m0 6v6"/>
+                <path d="m4.93 4.93 4.24 4.24m5.66 5.66 4.24 4.24"/>
+                <path d="M1 12h6m6 0h6"/>
+                <path d="m4.93 19.07 4.24-4.24m5.66-5.66 4.24-4.24"/>
+              </svg>
+              Advanced Settings
+            </button>
+
+            <div class="advanced-settings hidden" id="advancedSettings">
+              <div class="form-group">
+                <label for="captchaTimeout">Captcha Wait Time (seconds)</label>
+                <input type="number" id="captchaTimeout" min="5" max="60" value="10">
+              </div>
+              <div class="form-group">
+                <label for="uaePassTimeout">UAE Pass Timeout (seconds)</label>
+                <input type="number" id="uaePassTimeout" min="30" max="600" value="180">
+              </div>
+              <div class="form-group" id="downloadTimeoutSection">
+                <label for="downloadTimeout">Download Page Timeout (seconds)</label>
+                <input type="number" id="downloadTimeout" min="60" max="1800" value="900">
+                <small style="color: var(--text-secondary); display: block; margin-top: 0.25rem;">
+                  Maximum wait time for certificate generation (5-10 minutes typical)
+                </small>
+              </div>
+            </div>
+          </div>
+
+          <div class="config-actions">
+            <button class="btn-primary btn-large" id="runAgentBtn" disabled>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polygon points="5 3 19 12 5 21 5 3"/>
+              </svg>
+              Run Agent
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="agent-running hidden" id="agentRunningView">
+        <div class="running-header">
+          <h2 id="runningAgentTitle">Agent Running...</h2>
+          <button class="btn-danger" id="stopAgentBtn">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="6" y="6" width="12" height="12"/>
+            </svg>
+            Stop Agent
+          </button>
+        </div>
+
+        <div class="running-content">
+          <div class="status-indicator">
+            <div class="spinner"></div>
+            <span>Agent is processing your request...</span>
+          </div>
+
+          <div class="output-console">
+            <div class="console-header">
+              <span>Console Output</span>
+              <button class="btn-text btn-small" id="clearConsoleBtn">Clear</button>
+            </div>
+            <div class="console-content" id="consoleOutput"></div>
+          </div>
+
+          <div class="download-info hidden" id="downloadInfo">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+            <span>Downloads will be saved to: <strong id="downloadPath"></strong></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="agent-finished hidden" id="agentFinishedView">
+        <div class="finished-content">
+          <div class="success-icon">
+            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+          </div>
+          <h2>Agent Completed!</h2>
+          <p>Your automation has finished successfully.</p>
+          <div class="finished-actions">
+            <button class="btn-primary" id="openDownloadsFolderBtn">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 9h18v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9Z"/>
+                <path d="M3 9V7a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v2"/>
+              </svg>
+              Open Downloads Folder
+            </button>
+            <button class="btn-secondary" id="runAnotherBtn">Run Another Agent</button>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <footer class="footer">
+      <p>&copy; 2024 IMKAN. All rights reserved. | Powered by SAAL.AI</p>
+    </footer>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
