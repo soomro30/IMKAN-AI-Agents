@@ -69,11 +69,15 @@ Fully automated title deed generation and download for Dari platform using Excel
 
 ```bash
 # Clone repository
-git clone <repository-url>
+git clone git@github.com:soomro30/IMKAN-AI-Agents.git
 cd ai-automation-agent
 
 # Install dependencies
 npm install
+
+# Setup API credentials (IMPORTANT!)
+cp electron/credentials.example.js electron/credentials.js
+# Edit electron/credentials.js and add your real API keys
 
 # Build TypeScript
 npm run build
@@ -81,6 +85,8 @@ npm run build
 # Run Electron app
 npm run electron
 ```
+
+**⚠️ IMPORTANT:** The `electron/credentials.js` file is excluded from git for security. You must create it locally from the example file and add your real API keys.
 
 #### Fast Development Workflow
 
@@ -139,10 +145,30 @@ npm run package:mac
 **Output:** `release/IMKAN Agents-1.4.0-arm64.dmg` (122MB)
 
 ### Windows (on Windows PC)
-```bash
+
+**Step 1: Clone Repository on Windows**
+```cmd
+git clone git@github.com:soomro30/IMKAN-AI-Agents.git
+cd IMKAN-AI-Agents
+```
+
+**Step 2: Setup Credentials (CRITICAL!)**
+```cmd
+copy electron\credentials.example.js electron\credentials.js
+notepad electron\credentials.js
+```
+Add your real API keys to the file, then save and close.
+
+**Step 3: Install and Build**
+```cmd
+npm install
+npm run build
 npm run package:win
 ```
+
 **Output:** `release/IMKAN Agents Setup 1.4.0.exe` (140MB)
+
+**⚠️ Note:** Cannot cross-compile from Mac to Windows reliably. Must build on actual Windows machine.
 
 ### Linux
 ```bash
