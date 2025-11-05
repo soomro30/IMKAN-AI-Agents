@@ -9,3 +9,4 @@ coverage/
 .idea/
 release/
 downloads/
+electron/credentials.js
